@@ -1,0 +1,118 @@
+mysql> ALTER TABLE students ADD COLUMN gender ENUM("Male", "Female");
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> ALTER TABLE students MODIFY COLUMN birth_date DATE;
+Query OK, 5 rows affected (0.07 sec)
+
+mysql> ALTER TABLE students ADD COLUMN first_name varchar(255) AFTER student_id;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> ALTER TABLE students ADD COLUMN last_name varchar(255) AFTER first_name;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> SHOW CREATE TABLE student_subject;
+1 row in set (0.00 sec)
+
+mysql> ALTER TABLE student_subject DROP CONSTRAINT student_subject_ibfk_1;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> ALTER TABLE student_subject DROP CONSTRAINT student_subject_ibfk_2;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> ALTER TABLE student_subject ADD CONSTRAINT fk_student_subject_students FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE;
+Query OK, 5 rows affected (0.07 sec)
+
+mysql> ALTER TABLE student_subject ADD CONSTRAINT fk_student_subject_subjects FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE CASCADE;
+Query OK, 5 rows affected (0.07 sec)
+
+mysql> UPDATE students SET first_name = "Mohammad" WHERE student_id = 1;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> UPDATE students SET last_name = "Osama" WHERE student_id = 1;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> UPDATE students SET birth_date = "1995-12-21" WHERE student_id = 1;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> UPDATE students SET gender = "Male" WHERE student_id = 1;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> START TRANSACTION;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> INSERT INTO students (student_id, first_name, last_name, gender, birth_date, email, address, phone_no) VALUES (6,"Sasa", "Shaba", "Male", "1996-01-12","sasashabs@gmail.com", "Mahala", 015265758475);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> INSERT INTO student_exam VALUES (6, 1, "2023-03-19", 80);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> COMMIT;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> SELECT * FROM students;
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM students WHERE gender = "Male";
+2 rows in set (0.00 sec)
+
+mysql> SELECT COUNT(*) FROM students GROUP BY gender HAVING gender="Female";
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM students WHERE birth_date < "1991-10-01";
+Empty set (0.00 sec)
+
+mysql> SELECT * FROM subjects ORDER BY max_score;
+5 rows in set (0.00 sec)
+
+mysql> SELECT MAX(max_score) FROM subjects;
+1 row in set (0.01 sec)
+
+mysql> SELECT * FROM students WHERE first_name LIKE "A%";
+Empty set (0.01 sec)
+
+mysql> SELECT COUNT(*) FROM students WHERE first_name = "Mohammad"
+1 row in set (0.00 sec)
+
+mysql> SELECT gender, COUNT(*) gender_count FROM students GROUP BY gender;
+3 rows in set (0.00 sec)
+
+mysql> SELECT first_name, COUNT(*) as count FROM students GROUP BY first_name HAVING count > 2;
+1 row in set (0.00 sec)
+
+mysql> CREATE VIEW student_subject_view AS SELECT students.first_name, students.last_name, subjects.name FROM students JOIN student_subject ON students.student_id=student_subject.student_id JOIN subjects ON subjects.subject_id=student_subject.subject_id;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SELECT * FROM student_subject_view;
+5 rows in set (0.00 sec)
+
+
+
+mysql> CREATE VIEW student_tracks_view AS
+SELECT students.name AS student_name, tracks.name AS track_name
+FROM students
+JOIN tracks ON students.track_id = tracks.id;
+
+
+mysql> CREATE VIEW track_subjects_view AS
+SELECT tracks.name AS track_name, subjects.name AS subject_name
+FROM tracks
+JOIN subjects ON tracks.id = subjects.track_id;
+
+
+
+mysql> CREATE VIEW students_scores AS SELECT first_name, last_name, student_exam.score, subjects.name FROM students JOIN student_exam ON students.student_id=student_exam.student_id JOIN subjects ON subjects.subject_id=student_exam.subject_id;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SELECT * FROM students_scores;
+1 row in set (0.00 sec)
+
+mysql> CREATE TEMPORARY TABLE temp_subject_max_score AS SELECT name, max_score FROM subjects;
+Query OK, 5 rows affected (0.01 sec)
+
+
+mysql> SELECT * FROM temp_subject_max_score;
+5 rows in set (0.00 sec)
+
+
+mysql> DELETE FROM students WHERE student_id IN (SELECT student_id FROM student_exam WHERE score < 50);
+Query OK, 0 rows affected (0.01 sec)
