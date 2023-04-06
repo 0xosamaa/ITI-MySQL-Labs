@@ -1,0 +1,171 @@
+1)
+
+mysql> START TRANSACTION;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> INSERT INTO students VALUES (8,"Mayar","Osama","mayar.osama313@gmail.com","Mansoura",01010987654, "Female", "2000-07-21");
+Query OK, 1 row affected (0.02 sec)
+
+mysql> INSERT INTO student_exam (student_id, subject_id, score, exam_date) VALUES (8, 3, 99, "2023-03-21");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> INSERT INTO student_exam (student_id, subject_id, score, exam_date) VALUES (8, 2, 95, "2023-03-21");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> INSERT INTO student_exam (student_id, subject_id, score, exam_date) VALUES (8, 4, 97, "2023-03-21");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> COMMIT;
+Query OK, 0 rows affected (0.01 sec)
+
+2)
+
+mysql> SELECT CONCAT_WS(" ",DAY(exam_date), MONTHNAME(exam_date), YEAR(exam_date)) FROM student_exam;
++----------------------------------------------------------------------+
+| CONCAT_WS(" ",DAY(exam_date), MONTHNAME(exam_date), YEAR(exam_date)) |
++----------------------------------------------------------------------+
+| 19 March 2023                                                        |
+| 21 March 2023                                                        |
+| 21 March 2023                                                        |
+| 21 March 2023                                                        |
++----------------------------------------------------------------------+
+4 rows in set (0.00 sec)
+
+3)
+
+mysql> SELECT CONCAT_WS(" ",first_name, last_name), DATEDIFF(CURDATE(),DATE(birth_date)) as age FROM students;
+8 rows in set (0.01 sec)
+
+4)
+
+mysql> SELECT CONCAT_WS(" ", first_name, last_name) as full_name, ROUND(score) as score, subjects.name FROM students JOIN student_exam ON student_exam.student_id = students.student_id JOIN subjects ON student_exam.subject_id = subjects.subject_id;
+4 rows in set (0.00 sec)
+
+5)
+
+mysql> SELECT CONCAT_WS(" ", first_name, last_name) as full_name, YEAR(birth_date) FROM students;
+8 rows in set (0.00 sec)
+
+6)
+
+mysql> INSERT INTO student_exam VALUES (2,2, NOW(), 70);
+Query OK, 1 row affected (0.01 sec)
+
+7)
+
+mysql> CREATE FUNCTION hello (s CHAR(20))
+    -> RETURNS CHAR(50) DETERMINISTIC
+    -> RETURN CONCAT('Hello, ',s,'!');
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> SELECT hello("Osama");
++---------------+
+| hello("Osama") |
++---------------+
+| Hello, Osama!  |
++---------------+
+1 row in set (0.01 sec)
+
+8)
+
+mysql> CREATE FUNCTION multiply (x INT, y INT)
+    -> RETURNS INT DETERMINISTIC
+    -> RETURN x*y;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> SELECT multiply(2,3);
++---------------+
+| multiply(2,3) |
++---------------+
+|             6 |
++---------------+
+1 row in set (0.01 sec)
+
+9)
+
+mysql> DELIMITER //
+mysql> CREATE FUNCTION student_exam_score(student_id INT, exam_id INT)
+    -> RETURNS INT DETERMINISTIC
+    -> BEGIN
+    -> DECLARE student_score INT;
+    -> SELECT score INTO student_score FROM student_exam JOIN students ON students.student_id = student_exam.student_id WHERE student_exam.exam_id=exam_id AND student_exam.student_id = student_id;
+    -> Return student_score;
+    -> END; //
+DELIMITER ;
+
+10)
+
+mysql> CREATE FUNCTION failed_students_count(exam_id INT)
+    -> RETURNS INT DETERMINISTIC
+    -> BEGIN
+    -> DECLARE failed_count INT;
+    -> SELECT COUNT(*) INTO failed_count FROM student_exam WHERE score < 50;
+    -> RETURN failed_count;
+    -> END; //
+mysql> DELIMITER ;
+
+11)
+
+mysql> DELIMITER //
+mysql> CREATE FUNCTION avg_score(subjectID INT)
+    -> RETURNS INT DETERMINISTIC
+    -> BEGIN
+    -> DECLARE avg_score INT;
+    -> SELECT AVG(score) INTO avg_score FROM student_exam JOIN subjects ON subjects.subject_id = student_exam.subject_id WHERE subjects.subject_id = subjectID;
+    -> RETURN avg_score;
+    -> END;//
+mysql> DELIMITER ;
+
+12)
+
+mysql> CREATE TABLE deleted_students (student_id INT, first_name VARCHAR(255), last_name VARCHAR(255), email VARCHAR(255), address VARCHAR(255), phone_no VARCHAR(15), gender ENUM("Male","Female"),birth_date DATE);
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> ALTER TABLE deleted_students ADD PRIMARY KEY (student_id);
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> DESCRIBE deleted_students;
++------------+-----------------------+------+-----+---------+-------+
+| Field      | Type                  | Null | Key | Default | Extra |
++------------+-----------------------+------+-----+---------+-------+
+| student_id | int                   | NO   | PRI | NULL    |       |
+| first_name | varchar(255)          | YES  |     | NULL    |       |
+| last_name  | varchar(255)          | YES  |     | NULL    |       |
+| email      | varchar(255)          | YES  |     | NULL    |       |
+| address    | varchar(255)          | YES  |     | NULL    |       |
+| phone_no   | varchar(15)           | YES  |     | NULL    |       |
+| gender     | enum('Male','Female') | YES  |     | NULL    |       |
+| birth_date | date                  | YES  |     | NULL    |       |
++------------+-----------------------+------+-----+---------+-------+
+8 rows in set (0.00 sec)
+
+13)
+
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER after_student_delete AFTER DELETE ON students
+    -> FOR EACH ROW
+    -> BEGIN
+    -> INSERT INTO deleted_students VALUES (old.student_id, old.first_name, old.last_name, old.email, old.address, old.phone_no, old.gender, old.birth_date);
+    -> END; $$
+mysql> DELIMITER ;
+
+14)
+
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER after_student_insert AFTER INSERT ON students FOR EACH ROW BEGIN
+    -> INSERT INTO students_backup VALUES (new.student_id, new.first_name, new.last_name, new.email, new.address, new.phone_no, new.gender, new.birth_date);
+    -> END; $$
+mysql> DELIMITER ; 
+
+16)
+
+C:\Users\m7md> mysqldump -u root -p iti_grades > mydb.sql
+
+17)
+
+C:\Users\m7md> mysqldump -u root -p iti_grades students > mydb.sql
+
+18)
+
+C:\Users\m7md> mysql -u root -p iti_grades < mydb.sql
+
